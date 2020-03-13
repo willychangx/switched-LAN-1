@@ -4,6 +4,7 @@
 #include <sys/types.h>
 
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "main.h"
 #include "net.h"
@@ -13,32 +14,44 @@
 #include "switch.h"
 
 #define TENMILLISEC 10000
+#define MAXTABLE 100
+
+struct forwarding_table {
+	int dst[MAXTABLE];
+	int valid[MAXTABLE];
+	struct net_port *port[MAXTABLE];
+};
+
 void switch_main(int host_id)
 {
 int sent=0;
 int found=0;
 struct net_port *p;
-struct forwarding_table *ft;
+struct forwarding_table *fwdtable;
 struct packet *in_packet;
 int node_port_num;
 struct net_port *switch_port;
 struct net_port *node_port_list;
 struct net_port **node_port;
+struct man_port_at_host *man_port;
 int n;
 
-for(int i=0; i<100; i++){
-	printf("am i here\n");
-	ft->valid[i] = 0;
-	printf("how many\n");
+fwdtable = (struct forwarding_table *) malloc(sizeof(struct forwarding_table));
+
+for(int f=0; f<MAXTABLE; f++){
+	fwdtable->dst[f] = 0;
 }
-printf("hell\n");
-/*node_port_list = net_get_port_list(host_id);
-printf("help\n");
+
+man_port = net_get_host_port(host_id);
+node_port_list = net_get_port_list(host_id);
+
 node_port_num = 0;
 for (p=node_port_list; p!=NULL; p=p->next){
 	node_port_num++;
 }
-printf("node_port_num: %d\n", node_port_num);
+
+node_port = (struct net_port **)
+	malloc(node_port_num*sizeof(struct net_port *));
 
 p = node_port_list;
 for(int k=0; k < node_port_num; k++) {
@@ -47,20 +60,18 @@ for(int k=0; k < node_port_num; k++) {
 }
 
 while(1) {
-	printf("working\n");
 	found = 0; sent = 0;
 	for (int k=0; k < node_port_num; k++) {
 		in_packet = (struct packet *) malloc(sizeof(struct packet));
 		n = packet_recv(node_port[k], in_packet);
-
 		if(n > 0) {
 			for(int i=0; i<100; i++){
-				if(ft->valid[i]){
-					if(ft->dst[i] == in_packet->dst){
-						packet_send(ft->port[i], in_packet);
+				if(fwdtable->valid[i]){
+					if(fwdtable->dst[i] == in_packet->dst){
+						packet_send(fwdtable->port[i], in_packet);
 						sent = 1;
 					}
-					if(ft->dst[i] == in_packet->src) found=1;
+					if(fwdtable->dst[i] == in_packet->src) found=1;
 				}
 			}
 			if(!sent){
@@ -71,15 +82,15 @@ while(1) {
 			}
 			if(!found){
 				for(int i=0; i<100; i++){
-					if(ft->valid[i] == 0) {
-						ft->valid[i] = 1;
-						ft->dst[i] = in_packet->src;
-						ft->port[i] = node_port[k];
+					if(fwdtable->valid[i] == 0) {
+						fwdtable->valid[i] = 1;
+						fwdtable->dst[i] = in_packet->src;
+						fwdtable->port[i] = node_port[k];
 					}
 				}
 			}
 		}
 		usleep(TENMILLISEC);
 	}
-}*/
+}
 }
