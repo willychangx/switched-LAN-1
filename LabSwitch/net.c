@@ -495,6 +495,12 @@ else {
 int link_num;
 char link_type;
 int node0, node1;
+struct net_node *pointer;
+int opensock = 0;
+char * domain0;
+char * domain1;
+int port0, port1;
+struct addrinfo hints, *servinfo;
 
 fscanf(fp, " %d ", &link_num);
 printf("Number of links = %d\n", link_num);
@@ -515,6 +521,23 @@ else {
 			g_net_link[i].pipe_node0 = node0;
 			g_net_link[i].pipe_node1 = node1;
 		}
+		if (link_type == 'S') {
+			fscanf(fp," %d %s %d %s %d ", &node0, &domain0, &port0, &domain1, &port1);
+			for(int l=0; l<node_num; l++){
+				if(g_net_node[l] == node0) opensock = 1;
+				if(g_net_node[l].type == SWITCH)
+					pointer = g_net_node[l];
+			}
+			if(opensock)
+				getaddrinfo(domain0, port0, &hints, &servinfo);
+				socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+				connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+			else {
+				
+			}
+			g_net_link[i].type = SOCKET;
+			g_net_link[i].pipe_node0 = node0;
+			g_net_link[i].pipe_node1 = pointer->id;
 		else {
 			printf("   net.c: Unidentified link type\n");
 		}
